@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+
+from setuptools import setup, find_packages
+
+install_requires = [
+    'sortedcontainers>=1.5.9',
+    'requests>=2.13.0',
+    'six>=1.10.0',
+    'websocket-client>=0.40.0',
+    'pymongo>=3.5.1',
+]
+
+tests_require = [
+    'pytest',
+    'python-dateutil>=2.7.5',
+    ]
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setup(
+    name='cbadv',
+    version='2.0.0',
+    author='Tony Denion',
+    author_email='awakeproduction@hotmail.fr',
+    license='MIT',
+    url='https://github.com/kkuette/coinbaseadv-python',
+    packages=find_packages(),
+    install_requires=install_requires,
+    tests_require=tests_require,
+    extras_require={
+        'test': tests_require,
+    },
+    description='The unofficial Python client for the Coinbase Advanced Trade API',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    download_url='https://github.com/kkuette/coinbaseadv-python/archive/master.zip',
+    keywords=['gdax', 'gdax-api', 'orderbook', 'trade', 'bitcoin', 'ethereum', 'BTC', 'ETH', 'client', 'api', 'wrapper',
+              'exchange', 'crypto', 'currency', 'trading', 'trading-api', 'coinbase', 'pro', 'prime', 'coinbasepro', 'coinbaseadvancedtrade'],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Financial and Insurance Industry',
+        'Intended Audience :: Information Technology',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+    ],
+)

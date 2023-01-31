@@ -36,9 +36,9 @@ to its full potential, you must familiarize yourself with the official CB Advanc
 
 - You may manually install the project or use ```pip```:
 ```python
-pip install cbadv
+pip install cbadv (not yet added to pip)
 #or
-pip install git+git://github.com/danpaquin/coinbasepro-python.git
+pip install git+git://github.com/kkuette/coinbaseadv-python.git
 ```
 
 ### Public Client
