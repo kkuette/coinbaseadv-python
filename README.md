@@ -1,7 +1,8 @@
 # coinbaseadvancedtrade-python
-[![Build Status](https://travis-ci.org/danpaquin/coinbasepro-python.svg?branch=master)](https://travis-ci.org/danpaquin/coinbasepro-python)
-
 The Python client for the [Coinbase Advanced Trade API](https://docs.cloud.coinbase.com/advanced-trade-api/docs) (formerly known as Coinbase pro)
+
+refactor not finished yet, but it's getting there.
+Also this readme isn't fully rewritten yet.
 
 ##### Provided under MIT License by Tony Denion.
 *Note: this library may be subtly broken or buggy. The code is released under
