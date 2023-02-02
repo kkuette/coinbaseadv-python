@@ -54,140 +54,40 @@ import cbadv
 client = cbadv.Client(api_key=API_KEY, api_secret=API_SECRET)
 ```
 
-### PublicClient Methods
-- [get_products](https://docs.pro.coinbase.com//#get-products)
+### Client Methods
+
+All API endpoints are now Private. You must setup API access within your
+[account settings](https://coinbase.com/settings/api).
+
+
+- [list_accounts](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_getaccounts)
 ```python
-public_client.get_products()
+client.list_accounts()
 ```
 
-- [get_product_order_book](https://docs.pro.coinbase.com/#get-product-order-book)
+- [get_account](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_getaccount)
 ```python
-# Get the order book at the default level.
-public_client.get_product_order_book('BTC-USD')
-# Get the order book at a specific level.
-public_client.get_product_order_book('BTC-USD', level=1)
+client.get_account("7d0f7d8e-dd34-4d9c-a846-06f431c381ba")
 ```
 
-- [get_product_ticker](https://docs.pro.coinbase.com/#get-product-ticker)
-```python
-# Get the product ticker for a specific product.
-public_client.get_product_ticker(product_id='ETH-USD')
-```
-
-- [get_product_trades](https://docs.pro.coinbase.com/#get-trades) (paginated)
-```python
-# Get the product trades for a specific product.
-# Returns a generator
-public_client.get_product_trades(product_id='ETH-USD')
-```
-
-- [get_product_historic_rates](https://docs.pro.coinbase.com/#get-historic-rates)
-```python
-public_client.get_product_historic_rates('ETH-USD')
-# To include other parameters, see function docstring:
-public_client.get_product_historic_rates('ETH-USD', granularity=3000)
-```
-
-- [get_product_24hr_stats](https://docs.pro.coinbase.com/#get-24hr-stats)
-```python
-public_client.get_product_24hr_stats('ETH-USD')
-```
-
-- [get_currencies](https://docs.pro.coinbase.com/#get-currencies)
-```python
-public_client.get_currencies()
-```
-
-- [get_time](https://docs.pro.coinbase.com/#time)
-```python
-public_client.get_time()
-```
-
-### Authenticated Client
-
-Not all API endpoints are available to everyone.
-Those requiring user authentication can be reached using `AuthenticatedClient`.
-You must setup API access within your
-[account settings](https://pro.coinbase.com/profile/api).
-The `AuthenticatedClient` inherits all methods from the `PublicClient`
-class, so you will only need to initialize one if you are planning to
-integrate both into your script.
-
-```python
-import cbpro
-auth_client = cbpro.AuthenticatedClient(key, b64secret, passphrase)
-# Use the sandbox API (requires a different set of API access credentials)
-auth_client = cbpro.AuthenticatedClient(key, b64secret, passphrase,
-                                  api_url="https://api-public.sandbox.pro.coinbase.com")
-```
-
-### Pagination
-Some calls are [paginated](https://docs.pro.coinbase.com/#pagination), meaning multiple
-calls must be made to receive the full set of data. The CB Pro Python API provides
-an abstraction for paginated endpoints in the form of generators which provide a
-clean interface for iteration but may make multiple HTTP requests behind the 
-scenes. The pagination options `before`, `after`, and `limit` may be supplied as
-keyword arguments if desired, but aren't necessary for typical use cases.
-```python
-fills_gen = auth_client.get_fills()
-# Get all fills (will possibly make multiple HTTP requests)
-all_fills = list(fills_gen)
-```
-One use case for pagination parameters worth pointing out is retrieving only 
-new data since the previous request. For the case of `get_fills()`, the 
-`trade_id` is the parameter used for indexing. By passing 
-`before=some_trade_id`, only fills more recent than that `trade_id` will be 
-returned. Note that when using `before`, a maximum of 100 entries will be 
-returned - this is a limitation of CB Pro.
-```python
-from itertools import islice
-# Get 5 most recent fills
-recent_fills = islice(auth_client.get_fills(), 5)
-# Only fetch new fills since last call by utilizing `before` parameter.
-new_fills = auth_client.get_fills(before=recent_fills[0]['trade_id'])
-```
-
-### AuthenticatedClient Methods
-- [get_accounts](https://docs.pro.coinbase.com/#list-accounts)
-```python
-auth_client.get_accounts()
-```
-
-- [get_account](https://docs.pro.coinbase.com/#get-an-account)
-```python
-auth_client.get_account("7d0f7d8e-dd34-4d9c-a846-06f431c381ba")
-```
-
-- [get_account_history](https://docs.pro.coinbase.com/#get-account-history) (paginated)
-```python
-# Returns generator:
-auth_client.get_account_history("7d0f7d8e-dd34-4d9c-a846-06f431c381ba")
-```
-
-- [get_account_holds](https://docs.pro.coinbase.com/#get-holds) (paginated)
-```python
-# Returns generator:
-auth_client.get_account_holds("7d0f7d8e-dd34-4d9c-a846-06f431c381ba")
-```
-
-- [buy & sell](https://docs.pro.coinbase.com/#place-a-new-order)
+- [buy & sell](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_postorder)
 ```python
 # Buy 0.01 BTC @ 100 USD
-auth_client.buy(price='100.00', #USD
+client.buy(price='100.00', #USD
                size='0.01', #BTC
                order_type='limit',
                product_id='BTC-USD')
 ```
 ```python
 # Sell 0.01 BTC @ 200 USD
-auth_client.sell(price='200.00', #USD
+client.sell(price='200.00', #USD
                 size='0.01', #BTC
                 order_type='limit',
                 product_id='BTC-USD')
 ```
 ```python
 # Limit order-specific method
-auth_client.place_limit_order(product_id='BTC-USD', 
+client.place_limit_order(product_id='BTC-USD', 
                               side='buy', 
                               price='200.00', 
                               size='0.01')
@@ -195,66 +95,67 @@ auth_client.place_limit_order(product_id='BTC-USD',
 ```python
 # Place a market order by specifying amount of USD to use. 
 # Alternatively, `size` could be used to specify quantity in BTC amount.
-auth_client.place_market_order(product_id='BTC-USD', 
+client.place_market_order(product_id='BTC-USD', 
                                side='buy', 
                                funds='100.00')
 ```
 ```python
 # Stop order. `funds` can be used instead of `size` here.
-auth_client.place_stop_order(product_id='BTC-USD', 
+client.place_stop_order(product_id='BTC-USD', 
                               stop_type='loss', 
                               price='200.00', 
                               size='0.01')
 ```
 
-- [cancel_order](https://docs.pro.coinbase.com/#cancel-an-order)
+- [cancel_order](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_cancelorders)
 ```python
-auth_client.cancel_order("d50ec984-77a8-460a-b958-66f114b0de9b")
-```
-- [cancel_all](https://docs.pro.coinbase.com/#cancel-all)
-```python
-auth_client.cancel_all(product_id='BTC-USD')
+client.cancel_order("7d0f7d8e-dd34-4d9c-a846-06f431c381ba")
 ```
 
-- [get_orders](https://docs.pro.coinbase.com/#list-orders) (paginated)
+- [list_orders](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_gethistoricalorders)
 ```python
-# Returns generator:
-auth_client.get_orders()
+client.list_orders()
 ```
 
-- [get_order](https://docs.pro.coinbase.com/#get-an-order)
+- [list_fills](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_getfills)
 ```python
-auth_client.get_order("d50ec984-77a8-460a-b958-66f114b0de9b")
+client.list_fills()
 ```
 
-- [get_fills](https://docs.pro.coinbase.com/#list-fills) (paginated)
+- [get_order](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_gethistoricalorder)
 ```python
-# All return generators
-auth_client.get_fills()
-# Get fills for a specific order
-auth_client.get_fills(order_id="d50ec984-77a8-460a-b958-66f114b0de9b")
-# Get fills for a specific product
-auth_client.get_fills(product_id="ETH-BTC")
+client.get_order("7d0f7d8e-dd34-4d9c-a846-06f431c381ba")
 ```
 
-- [deposit & withdraw](https://docs.pro.coinbase.com/#depositwithdraw)
+- [list_products](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_getproducts)
 ```python
-depositParams = {
-        'amount': '25.00', # Currency determined by account specified
-        'coinbase_account_id': '60680c98bfe96c2601f27e9c'
-}
-auth_client.deposit(depositParams)
+client.list_products()
 ```
+
+- [get_product](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_getproduct)
 ```python
-# Withdraw from CB Pro into Coinbase Wallet
-withdrawParams = {
-        'amount': '1.00', # Currency determined by account specified
-        'coinbase_account_id': '536a541fa9393bb3c7000023'
-}
-auth_client.withdraw(withdrawParams)
+client.get_product("BTC-USD")
+```
+
+- [get_product_candles](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_getcandles)
+```python
+client.get_product_candles("BTC-USD", start, end, granularity)
+```
+
+- [get_market_trades](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_getmarkettrades)
+```python
+client.get_market_trades("BTC-USD", limit=100) # limit default is 100
+```
+
+- [get_transactions_summary](https://docs.cloud.coinbase.com/advanced-trade-api/reference/retailbrokerageapi_gettransactionsummary)
+```python
+client.get_transactions_summary()
 ```
 
 ### WebsocketClient
+
+Not fully refactored yet.
+
 If you would like to receive real-time market updates, you must subscribe to the
 [websocket feed](https://docs.pro.coinbase.com/#websocket-feed).
 

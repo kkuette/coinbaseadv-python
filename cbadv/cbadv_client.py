@@ -704,7 +704,7 @@ class Client:
         return self._send_message('GET', '/products/' + product_id + '/candles',
                                   params=params)
 
-    def get_market_trades(self, product_id, limit="10000"):
+    def get_market_trades(self, product_id, limit="100"):
         """ Get market trades.
 
         Args:
@@ -731,7 +731,7 @@ class Client:
         return self._send_message('GET', '/products/' + product_id + '/trades',
                                   params=params)
 
-    def get_transactions_summary(self, start_date, end_date, user_native_currency='USD'):
+    def get_transactions_summary(self, start_date='', end_date='', user_native_currency='USD'):
         """ Get transactions summary.
 
         Returns:
