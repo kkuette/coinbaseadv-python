@@ -15,7 +15,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Benefits
-- A simple to use python wrapper for endpoints.
+- A simple to use python wrapper for endpoints.-
 - In about 10 minutes, you could be programmatically trading on one of the
 largest Bitcoin exchanges in the *world*!
 - Do not worry about handling the nuances of the API with easy-to-use methods
@@ -37,7 +37,7 @@ to its full potential, you must familiarize yourself with the official CB Advanc
 
 - You may manually install the project or use ```pip```:
 ```python
-pip install cbadv (not yet added to pip)
+pip install cbadv (not yet added to PyPi)
 #or
 pip install git+git://github.com/kkuette/coinbaseadv-python.git
 ```
@@ -45,11 +45,21 @@ pip install git+git://github.com/kkuette/coinbaseadv-python.git
 ### Client
 
 ```python
+import cbadv
+
 API_KEY = ''
 API_SECRET = ''
 
-import cbadv
 client = cbadv.Client(api_key=API_KEY, api_secret=API_SECRET)
+```
+
+or
+
+```python
+import json
+import cbadv
+
+client = cbadv.Client(**json.load(open('path/to/credentials.json')))
 ```
 
 ### Client Methods
@@ -215,7 +225,7 @@ api_key = ''
 secret_key = ''
 
 wsClient = myWebsocketClient(api_key, secret_key)
-#wsClient = myWebsocketClient(**json.load(open('api_config.json'))) # load from file
+#wsClient = myWebsocketClient(**json.load(open('path/to/credentials.json'))) # load from file
 wsClient.start()
 print(wsClient.url, wsClient.products)
 while (wsClient.message_count < 500):
@@ -234,15 +244,17 @@ python -m pytest
 
 ### Real-time OrderBook
 
-Under refactor.
-
 The ```OrderBook``` subscribes to a websocket and keeps a real-time record of
 the orderbook for the product_id input.  Please provide your feedback for future
 improvements.
 
 ```python
-import cbpro, time
-order_book = cbpro.OrderBook(product_id='BTC-USD')
+import cbadv, time, json
+
+API_KEY = ''
+API_SECRET = ''
+
+order_book = cbadv.OrderBooks(api_key, api_secret, product_id=['BTC-USD', 'ETH-USD'])
 order_book.start()
 time.sleep(10)
 order_book.close()

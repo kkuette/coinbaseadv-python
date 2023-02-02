@@ -148,7 +148,7 @@ if __name__ == "__main__":
         def on_close(self):
             print("-- Goodbye! --")
 
-    wsClient = MyWebsocketClient(channel="market_trades", **json.load(open(conf_path)))
+    wsClient = MyWebsocketClient(channel="level2", **json.load(open(conf_path)))
     wsClient.start()
     print(wsClient.url, wsClient.products)
     try:

@@ -11,9 +11,9 @@ from cbadv.order_book import OrderBook
 
 class OrderBooks(WebsocketClient):
 
-    def __init__(self, product_id=["BTC-USD"], log_to=None):
-        super(OrderBooks, self).__init__(
-            products=product_id, channels=['full'])
+    def __init__(self, api_key, api_secret, product_id=["BTC-USD", "ETH-USD"], log_to=None):
+        super(OrderBooks, self).__init__(api_key, api_secret, 
+            products=product_id, channel='level2')
         self.product_id = product_id
         self.order_books = {}
         self._log_to = log_to
@@ -27,57 +27,66 @@ class OrderBooks(WebsocketClient):
         
     def on_open(self):
         for order_book in self.order_books.values():
-            order_book.sequence = -1
+            order_book.sequence = 0
         print("-- Subscribed to OrderBooks! --\n")
 
     def on_close(self):
         print("\n-- OrderBook Socket Closed! --")
 
     def on_message(self, msg):
-        if msg['type'] != 'subscriptions':
-            if self._log_to:
-                pickle.dump(msg, self._log_to)
-            self.order_books[msg['product_id']]._message(msg)
+        if self._log_to:
+            pickle.dump(msg, self._log_to)
+        for event in msg['events']:
+            if not 'subscriptions' in event:
+                    self.order_books[event['product_id']]._message(event['updates'])
+
 
 if __name__ == '__main__':
-    import sys
+    import sys, json
     import time
     import datetime as dt
 
     class OrderBooksConsole(OrderBooks):
         ''' Logs real-time changes to the bid-ask spread to the console '''
 
-        def __init__(self, product_id=None):
-            super(OrderBooksConsole, self).__init__(product_id=product_id)
-
-            # latest values of bid-ask spread for each product
+        def __init__(self, api_key, api_secret, product_id=None):
+            super(OrderBooksConsole, self).__init__(api_key, api_secret, product_id=product_id)
             self._bid = {}
             self._ask = {}
             self._bid_depth = {}
             self._ask_depth = {}
 
+            for product_id in self.product_id:
+                # Initialize the bid-ask spread for each product
+                self._bid[product_id] = 0
+                self._ask[product_id] = 0
+                self._bid_depth[product_id] = 0
+                self._ask_depth[product_id] = 0
+
         def on_message(self, message):
-            if message['type'] != 'subscriptions':
-                super(OrderBooksConsole, self).on_message(message)
+            super(OrderBooksConsole, self).on_message(message)
 
-                # Calculate newest bid-ask spread
-                bid = self.order_books[message['product_id']].get_bid()
-                bids = self.order_books[message['product_id']].get_bids(bid)
-                bid_depth = sum([b['size'] for b in bids])
-                ask = self.order_books[message['product_id']].get_ask()
-                asks = self.order_books[message['product_id']].get_asks(ask)
-                ask_depth = sum([a['size'] for a in asks])
+            for event in message['events']:
+                if not 'subscriptions' in event:
+                    # Calculate newest bid-ask spread
+                    bid = self.order_books[event['product_id']].get_bid()['price_level']
+                    bid_depth = self.order_books[event['product_id']].get_bid()['new_quantity']
+                    ask = self.order_books[event['product_id']].get_ask()['price_level']
+                    ask_depth = self.order_books[event['product_id']].get_ask()['new_quantity']
 
-                # Log changes to the bid-ask spread to the console
-                if bid != self._bid[message['product_id']] or ask != self._ask[message['product_id']]:
-                    self._bid[message['product_id']] = bid
-                    self._ask[message['product_id']] = ask
-                    self._bid_depth[message['product_id']] = bid_depth
-                    self._ask_depth[message['product_id']] = ask_depth
-                    print('{} {} bid: {:.3f} @ {:.2f}\task: {:.3f} @ {:.2f}'.format(
-                        dt.datetime.now(), message['product_id'], bid_depth, bid, ask_depth, ask))
+                    # Log changes to the bid-ask spread to the console
+                    if bid != self._bid[event['product_id']] or ask != self._ask[event['product_id']] or \
+                        bid_depth != self._bid_depth[event['product_id']] or ask_depth != self._ask_depth[event['product_id']]:
+                        self._bid[event['product_id']] = bid
+                        self._ask[event['product_id']] = ask
+                        self._bid_depth[event['product_id']] = bid_depth
+                        self._ask_depth[event['product_id']] = ask_depth
+                        print('{} {} bid: {} @ {:.2f}\task: {} @ {:.2f}'.format(
+                            dt.datetime.now(), event['product_id'], bid_depth, bid, ask_depth, ask))
 
-    order_books = OrderBooksConsole(product_id=['BTC-USD', 'ETH-USD'])
+    conf_path = 'conf.json'
+
+    order_books = OrderBooksConsole(product_id=['BTC-USD', 'ETH-USD'], **json.load(open(conf_path)))
     order_books.start()
     try:
         while True:
