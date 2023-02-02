@@ -5,8 +5,7 @@
 # Template object to receive messages from the Coinbase Websocket Feed
 
 from __future__ import print_function
-import json
-import time
+import json, time, hmac, hashlib
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 from cbadv.cbadv_auth import get_auth_headers
@@ -15,26 +14,24 @@ from cbadv.cbadv_auth import get_auth_headers
 class WebsocketClient(object):
     def __init__(
             self,
-            url="wss://ws-feed.pro.coinbase.com/",
+            api_key,
+            api_secret,
+            url="wss://advanced-trade-ws.coinbase.com",
             products=None,
             message_type="subscribe",
             should_print=True,
-            auth=False,
-            api_key="",
-            api_secret="",
             # Make channels a required keyword-only argument; see pep3102
             *,
-            # Channel options: ['ticker', 'user', 'matches', 'level2', 'full']
-            channels):
+            # Channel options: status, ticker, ticker_batch, level2, user, market_trades
+            channel):
         self.url = url
         self.products = products
-        self.channels = channels
+        self.channel = channel
         self.type = message_type
         self.stop = True
         self.error = None
         self.ws = None
         self.thread = None
-        self.auth = auth
         self.api_key = api_key
         self.api_secret = api_secret
         self.should_print = should_print
@@ -60,22 +57,20 @@ class WebsocketClient(object):
         if self.url[-1] == "/":
             self.url = self.url[:-1]
 
-        if self.channels is None:
-            self.channels = [{"name": "ticker", "product_ids": [product_id for product_id in self.products]}]
-            sub_params = {'type': 'subscribe', 'product_ids': self.products, 'channels': self.channels}
+        if self.channel is None:
+            self.channel = "ticker"
+            sub_params = {'type': 'subscribe', 'channel': self.channel, 'product_ids': self.products}
         else:
-            sub_params = {'type': 'subscribe', 'product_ids': self.products, 'channels': self.channels}
+            sub_params = {'type': 'subscribe', 'channel': self.channel, 'product_ids': self.products}
 
-        if self.auth:
-            timestamp = str(time.time())
-            message = timestamp + 'GET' + '/users/self/verify'
-            auth_headers = get_auth_headers(timestamp, message, self.api_key, self.api_secret)
-            sub_params['signature'] = auth_headers['CB-ACCESS-SIGN']
-            sub_params['key'] = auth_headers['CB-ACCESS-KEY']
-            sub_params['timestamp'] = auth_headers['CB-ACCESS-TIMESTAMP']
+        timestamp = str(int(time.time()))
+        message = timestamp + ''.join(self.channel) + ','.join(self.products)
+        auth_headers = get_auth_headers(timestamp, message, self.api_key, self.api_secret)
+        sub_params['signature'] = auth_headers['CB-ACCESS-SIGN']
+        sub_params['api_key'] = auth_headers['CB-ACCESS-KEY']
+        sub_params['timestamp'] = auth_headers['CB-ACCESS-TIMESTAMP']
 
         self.ws = create_connection(self.url)
-
         self.ws.send(json.dumps(sub_params))
 
     def _keepalive(self, interval=30):
@@ -131,16 +126,17 @@ class WebsocketClient(object):
 
 
 if __name__ == "__main__":
-    import sys
+    import sys, json, time
     import cbadv
-    import time
+
+    conf_path = 'conf.json'
 
     class MyWebsocketClient(cbadv.WebsocketClient):
-        def __init__(self, channels):
-            super().__init__(channels=channels)
+        def __init__(self, channel, **kwargs):
+            super().__init__(channel=channel, **kwargs)
 
         def on_open(self):
-            self.url = "wss://ws-feed.pro.coinbase.com/"
+            self.url = "wss://advanced-trade-ws.coinbase.com"
             self.products = ["BTC-USD"]
             self.message_count = 0
             print("Let's count the messages!")
@@ -152,8 +148,7 @@ if __name__ == "__main__":
         def on_close(self):
             print("-- Goodbye! --")
 
-
-    wsClient = MyWebsocketClient(channels=["full"])
+    wsClient = MyWebsocketClient(channel="market_trades", **json.load(open(conf_path)))
     wsClient.start()
     print(wsClient.url, wsClient.products)
     try:

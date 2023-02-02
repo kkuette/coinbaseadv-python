@@ -152,17 +152,17 @@ client.get_transactions_summary()
 
 ### WebsocketClient
 
-Not fully refactored yet.
-
 If you would like to receive real-time market updates, you must subscribe to the
-[websocket feed](https://docs.pro.coinbase.com/#websocket-feed).
+[websocket feed](https://docs.cloud.coinbase.com/advanced-trade-api/docs/ws-overview).
+Websockets are now available for Authenticated clients only. You must setup API
+access within your [account settings](https://coinbase.com/settings/api).
 
 #### Subscribe to a single product
 ```python
-import cbpro
+import cbadv
 
-# Parameters are optional
-wsClient = cbpro.WebsocketClient(url="wss://ws-feed.pro.coinbase.com",
+# You need to provide api key and secret others parameters are optional
+wsClient = cbadv.WebsocketClient(api_key, secret_key, url="wss://advanced-trade-ws.coinbase.com",
                                 products="BTC-USD",
                                 channels=["ticker"])
 # Do other stuff...
@@ -171,33 +171,13 @@ wsClient.close()
 
 #### Subscribe to multiple products
 ```python
-import cbpro
-# Parameters are optional
-wsClient = cbpro.WebsocketClient(url="wss://ws-feed.pro.coinbase.com",
+import cbadv
+# You need to provide api key and secret others parameters are optional
+wsClient = cbadv.WebsocketClient(api_key, secret_key, url="wss://advanced-trade-ws.coinbase.com",
                                 products=["BTC-USD", "ETH-USD"],
                                 channels=["ticker"])
 # Do other stuff...
 wsClient.close()
-```
-
-### WebsocketClient + Mongodb
-The ```WebsocketClient``` now supports data gathering via MongoDB. Given a
-MongoDB collection, the ```WebsocketClient``` will stream results directly into
-the database collection.
-```python
-# import PyMongo and connect to a local, running Mongo instance
-from pymongo import MongoClient
-import cbpro
-mongo_client = MongoClient('mongodb://localhost:27017/')
-
-# specify the database and collection
-db = mongo_client.cryptocurrency_database
-BTC_collection = db.BTC_collection
-
-# instantiate a WebsocketClient instance, with a Mongo collection as a parameter
-wsClient = cbpro.WebsocketClient(url="wss://ws-feed.pro.coinbase.com", products="BTC-USD",
-    mongo_collection=BTC_collection, should_print=False)
-wsClient.start()
 ```
 
 ### WebsocketClient Methods
@@ -213,10 +193,13 @@ argument that contains the message of dict type.
 - on_close - called once after the websocket has been closed.
 - close - call this method to close the websocket connection (do not overwrite).
 ```python
-import cbpro, time
-class myWebsocketClient(cbpro.WebsocketClient):
+import cbadv, time
+class myWebsocketClient(cbadv.WebsocketClient):
+    def __init__(self, apit_key, secret_key):
+        super().__init__(api_key, secret_key)
+
     def on_open(self):
-        self.url = "wss://ws-feed.pro.coinbase.com/"
+        self.url = "wss://advanced-trade-ws.coinbase.com"
         self.products = ["LTC-USD"]
         self.message_count = 0
         print("Lets count the messages!")
@@ -228,7 +211,11 @@ class myWebsocketClient(cbpro.WebsocketClient):
     def on_close(self):
         print("-- Goodbye! --")
 
-wsClient = myWebsocketClient()
+api_key = ''
+secret_key = ''
+
+wsClient = myWebsocketClient(api_key, secret_key)
+#wsClient = myWebsocketClient(**json.load(open('api_config.json'))) # load from file
 wsClient.start()
 print(wsClient.url, wsClient.products)
 while (wsClient.message_count < 500):
@@ -246,6 +233,9 @@ python -m pytest
 ```
 
 ### Real-time OrderBook
+
+Under refactor.
+
 The ```OrderBook``` subscribes to a websocket and keeps a real-time record of
 the orderbook for the product_id input.  Please provide your feedback for future
 improvements.
