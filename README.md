@@ -43,8 +43,6 @@ pip install git+git://github.com/kkuette/coinbaseadv-python.git
 ```
 
 ### Client
-Only some endpoints in the API are available to everyone.  The public endpoints
-can be reached using ```Client```
 
 ```python
 API_KEY = ''
