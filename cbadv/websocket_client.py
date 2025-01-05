@@ -88,6 +88,7 @@ class WebsocketClient(object):
                 self.on_error(e)
             except Exception as e:
                 self.on_error(e)
+                self._reconnect()
             else:
                 self.on_message(msg)
 
@@ -102,6 +103,12 @@ class WebsocketClient(object):
 
         self.on_close()
 
+    def _reconnect(self):
+        self._disconnect()
+        time.sleep(0.01)  # Wait for 0.01 seconds before reconnecting
+        self._connect()
+        self._listen()
+
     def close(self):
         self.stop = True   # will only disconnect after next msg recv
         self._disconnect() # force disconnect so threads can join
@@ -114,6 +121,7 @@ class WebsocketClient(object):
     def on_close(self):
         if self.should_print:
             print("\n-- Socket Closed --")
+        self._reconnect()
 
     def on_message(self, msg):
         if self.should_print:
